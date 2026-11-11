@@ -12,19 +12,23 @@
 ### 1.1 Recurrent Neural Networks (RNNs) and the Sequential Bottleneck
 Before Transformers, sequence modeling relied on Recurrent Neural Networks (RNNs). An RNN processes tokens sequentially, updating a hidden state vector $h_t$ at each discrete time step:
 
-$$h_t = \tanh(W_{hh} h_{t-1} + W_{xh} x_t + b_h)$$
+$$
+h_t = \tanh(W_{hh} h_{t-1} + W_{xh} x_t + b_h)
+$$
 
 ![Recurrent Neural Network Unfolding](results/rnn_unfolded.png)
-*Figure 1: Recurrent Neural Network (RNN) cell and its temporal unfolding across sequential time steps, showing recurrent transition weights $W_{hh}$, input projection $W_{xh}$, and output projection $W_{hy}$.*
+**Figure 1:** Recurrent Neural Network (RNN) cell and its temporal unfolding across sequential time steps, showing recurrent transition weights $W_{hh}$, input projection $W_{xh}$, and output projection $W_{hy}$.
 
 **Why Recurrence Fails:**
-- **Strict $O(T)$ Serial Processing:** $h_t$ cannot be computed until $h_{t-1}$ is finished. The temporal loop cannot be parallelized across tokens, leaving GPUs underutilized.
+- **Strict Serial Processing:** The temporal loop requires $O(T)$ sequential steps because $h_t$ cannot be computed until $h_{t-1}$ is finished. This cannot be parallelized across tokens, leaving GPUs underutilized.
 - **Path Length Bottleneck:** For token $T$ to interact with token $1$, information must traverse $T-1$ successive recurrent steps.
 
 ### 1.2 Vanishing and Exploding Gradients
 During Backpropagation Through Time (BPTT), applying the calculus chain rule across $T$ sequential steps requires repeatedly multiplying intermediate derivatives:
 
-$$\frac{\partial \mathcal{L}_T}{\partial h_1} = \frac{\partial \mathcal{L}_T}{\partial h_T} \prod_{t=2}^{T} \frac{\partial h_t}{\partial h_{t-1}}$$
+$$
+\frac{\partial \mathcal{L}_T}{\partial h_1} = \frac{\partial \mathcal{L}_T}{\partial h_T} \prod_{t=2}^{T} \frac{\partial h_t}{\partial h_{t-1}}
+$$
 
 - **Vanishing Gradients:** When repeated derivative terms are smaller than 1, continuous multiplication over long sequence steps shrinks the gradient exponentially closer and closer to zero. Earlier tokens receive virtually no learning signal, making long-range dependencies unlearnable.
 - **Exploding Gradients:** Conversely, when derivative terms are consistently greater than 1, repeated multiplication causes the gradients to blow up toward infinity, leading to numeric instability and training divergence.
@@ -41,7 +45,7 @@ LSTMs and GRUs introduced gating mechanisms and an additive cell state ($c_t = f
 
 ### 2.1 The Fixed-Vector Bottleneck
 In early Sequence-to-Sequence (Seq2Seq) translation models:
-1. The **Encoder** reads the entire source sentence and compresses it into a **single hidden vector $h_T$**.
+1. The **Encoder** reads the entire source sentence and compresses it into a single hidden vector $h_T$.
 2. The **Decoder** must generate the entire translation using only that single vector as reference.
 
 ```
@@ -58,15 +62,21 @@ Bahdanau et al. allowed the decoder to search dynamically across **all intermedi
 
 The decoder state $s_{i-1}$ acts as a **Query** that scores relevance against each encoder state $h_j$ using a small non-linear neural network:
 
-$$e_{ij} = v_a^T \tanh(W_a s_{i-1} + U_a h_j)$$
-$$\alpha_{ij} = \text{Softmax}(e_{ij}) \implies c_i = \sum_{j} \alpha_{ij} h_j$$
+$$
+e_{ij} = v_a^T \tanh(W_a s_{i-1} + U_a h_j)
+$$
+$$
+\alpha_{ij} = \text{Softmax}(e_{ij}) \implies c_i = \sum_{j} \alpha_{ij} h_j
+$$
 
 The model produces a dynamic context vector $c_i$ tailored to what it needs at step $i$.
 
 ### 2.3 Luong Multiplicative Attention (2015)
 Luong et al. simplified Bahdanau's learned non-linear network to a direct **dot product**:
 
-$$e_{ij} = s_i^T h_j$$
+$$
+e_{ij} = s_i^T h_j
+$$
 
 **Intuition:** The dot product measures the geometric cosine similarity between two vectors. If the decoder's query aligns with an encoder state, their dot product is large, producing a high attention weight.
 
@@ -76,17 +86,19 @@ $$e_{ij} = s_i^T h_j$$
 
 ### 3.1 Eliminating the Recurrent Backbone
 In 2017, Vaswani et al. (Google Brain) made the decisive leap:
-> *If attention allows any token to directly access any other token in a single step ($O(1)$ path length), why keep the recurrent RNN backbone at all?*
+> If attention allows any token to directly access any other token in a single step ($O(1)$ path length), why keep the recurrent RNN backbone at all?
 
 By stripping away recurrence and computing attention directly between all tokens in a sequence (**Self-Attention**), the architecture became fully parallelizable.
 
 ### 3.2 Scaled Dot-Product Attention
-Input representations are linearly projected into three matrices: **Queries ($Q$)**, **Keys ($K$)**, and **Values ($V$)**:
-- **Query ($Q$):** What the current token is looking for.
-- **Key ($K$):** What each token contains.
-- **Value ($V$):** The contextual information to retrieve if Query matches Key.
+Input representations are linearly projected into three matrices: **Queries** ($Q$), **Keys** ($K$), and **Values** ($V$):
+- **Query** ($Q$): What the current token is looking for.
+- **Key** ($K$): What each token contains.
+- **Value** ($V$): The contextual information to retrieve if Query matches Key.
 
-$$\text{Attention}(Q, K, V) = \text{Softmax}\left(\frac{Q K^T}{\sqrt{d_k}}\right) V$$
+$$
+\text{Attention}(Q, K, V) = \text{Softmax}\left(\frac{Q K^T}{\sqrt{d_k}}\right) V
+$$
 
 ```
    Q (Queries)          K (Keys)
@@ -114,7 +126,9 @@ Large dot products push the Softmax function into saturated regions where its de
 ### 3.4 Multi-Head Attention
 Instead of computing attention once across the full dimension $d_{model}$, Multi-Head Attention splits the dimension into $h$ heads of size $d_k = d_{model} / h$:
 
-$$\text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \dots, \text{head}_h) W_O$$
+$$
+\text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \dots, \text{head}_h) W_O
+$$
 
 - **Intuition:** Different heads specialize in different relationships simultaneously (e.g., Head 1 tracks immediate syntax, Head 2 tracks long-range antecedents, Head 3 tracks punctuation).
 - **Compute Cost:** Because $d_k = d_{model} / h$, running $h$ parallel heads costs the exact same number of operations as a single large head.
@@ -149,7 +163,9 @@ OpenAI showed that translation, question answering, and summarization can all be
 
 By removing the encoder and cross-attention sub-layers, GPT-2 becomes a single, clean stack of causal decoder blocks trained on:
 
-$$\mathcal{L} = -\sum_{t=1}^{T} \log P(x_t \mid x_1, \dots, x_{t-1})$$
+$$
+\mathcal{L} = -\sum_{t=1}^{T} \log P(x_t \mid x_1, \dots, x_{t-1})
+$$
 
 ### 4.3 Comparing the Three Variants of Attention
 Transformers utilize three distinct formulations of the attention mechanism depending on model architecture:
@@ -166,11 +182,23 @@ Transformers utilize three distinct formulations of the attention mechanism depe
 ### 4.4 Causal Masking
 During training, the full sequence of length $T$ is fed simultaneously so parallel hardware processes all tokens in a single step. 
 
-To prevent positions from looking ahead at future answers, an upper-triangular mask of $-\infty$ is added to the dot-product scores:
+To prevent positions from looking ahead at future tokens, an additive mask matrix $M \in \mathbb{R}^{T \times T}$ is applied to the raw attention scores:
 
-$$\text{att} = \text{att.masked\_fill}(\text{causal\_mask} == 0, -\infty)$$
+$$
+\text{Attention}(Q, K, V) = \text{Softmax}\left(\frac{Q K^T}{\sqrt{d_k}} + M\right) V
+$$
 
-Since $\exp(-\infty) = 0$, future tokens receive strictly zero attention weight, guaranteeing valid autoregressive prediction.
+$$
+M_{ij} = \begin{cases} 0 & \text{if } i \ge j \\ -\infty & \text{if } i < j \end{cases}
+$$
+
+In PyTorch, this is implemented by applying `.masked_fill()` with a lower-triangular mask buffer:
+
+```python
+att = att.masked_fill(self.causal_mask[:, :, :T, :T] == 0, float("-inf"))
+```
+
+Since $\exp(-\infty) = 0$, future positions receive strictly zero attention weight after Softmax, guaranteeing that each token's prediction depends solely on past context.
 
 ### 4.5 Pre-LN vs. Post-LN: Gradient Flow and Stability
 - **Post-LN (Vaswani 2017):** $x_{l+1} = \text{LN}(x_l + f(x_l))$. Normalizing *after* the residual addition degrades gradient flow in deep networks, requiring fragile learning rate warmups.
@@ -276,9 +304,9 @@ Comparing `CharTokenizer` ($V=65$) and `BPETokenizer` ($V=160$):
 - **Test Sentence:** `"First Citizen:\nBefore we proceed any further, hear me speak."`
 - **Character-Level Count:** 60 tokens ($V=65$)
 - **BPE Subword Count:** 39 tokens ($V=160$)
-- **Compression Factor:** **$1.54\times$**
+- **Compression Factor:** $1.54\times$
 - **Learned Subwords:** `['F', 'irst ', 'C', 'i', 'ti', 'z', 'en', ':\n', 'B', 'e']`
-- **Corpus Compression:** On the full 111,540 character validation corpus, BPE achieves a **$1.78\times$ compression ratio** (reducing sequence length from 111,540 to 62,727 tokens).
+- **Corpus Compression:** On the full 111,540 character validation corpus, BPE achieves a $1.78\times$ compression ratio (reducing sequence length from 111,540 to 62,727 tokens).
 - **Key Takeaway:** BPE effectively doubles the semantic information content within any fixed context horizon ($T=128$), directly mitigating the quadratic attention memory footprint.
 
 ---
@@ -298,7 +326,7 @@ The baseline GPT-2 model ($d_{model}=128$, $4$ layers, $4$ heads, $T=128$, batch
 | **2000** | **1.4715** | **1.6538** | **5.23** |
 
 ![Training and Validation Loss Trajectory](results/loss_dynamics.png)
-*Figure 2: Cross-entropy loss trajectory over 2,000 steps. Validation loss reaches 1.6538, corresponding to an effective vocabulary choice of only ~5.2 characters per position.*
+**Figure 2:** Cross-entropy loss trajectory over 2,000 steps. Validation loss reaches 1.6538, corresponding to an effective vocabulary choice of only ~5.2 characters per position.
 
 ---
 
@@ -429,10 +457,10 @@ To evaluate the contribution of transformer depth, an ablated model with $2$ lay
 | 400 | ~2.18 | 2.2778 | $+0.10$ |
 | 600 | ~2.03 | 2.1166 | $+0.09$ |
 | 800 | ~1.94 | 2.0125 | $+0.07$ |
-| **1000** | **1.8540** | **1.9499** | **$+0.0959$** |
+| **1000** | **1.8540** | **1.9499** | **+0.0959** |
 
 ![Ablation Study: Convergence of 4 Layers vs 2 Layers](results/ablation_depth.png)
-*Figure 3: Validation loss comparison between the 4-layer baseline and 2-layer ablated model over 1,000 steps.*
+**Figure 3:** Validation loss comparison between the 4-layer baseline and 2-layer ablated model over 1,000 steps.
 
 - **Key Takeaway:** The 2-layer model exhibits a persistent $\approx 0.10$ cross-entropy penalty throughout training. While shallow networks can model local n-gram statistics, deeper layers are essential for constructing hierarchical abstractions, long-distance syntactic dependencies, and stable character identities.
 
