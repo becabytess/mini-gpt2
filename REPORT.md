@@ -297,7 +297,7 @@ All components in the codebase were built from scratch using pure PyTorch tensor
 
 ## 6. Empirical Experiments & Findings
 
-The empirical evaluations were conducted on the full model architecture using the self-contained execution pipeline and trained across 2,000 optimization steps.
+The empirical evaluations were conducted on the full model architecture across 2,000 optimization steps. The complete pre-executed notebook with outputs and interactive plots is accessible on Google Colab: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1MIBM8Zjz-L7lLfQlj5HTbSuTqLPsknB_?usp=sharing).
 
 ### 6.1 Tokenizer Compression Dynamics (Char vs. BPE)
 Comparing `CharTokenizer` ($V=65$) and `BPETokenizer` ($V=160$):

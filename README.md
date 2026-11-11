@@ -41,13 +41,18 @@ gpt2_from_scratch/
 
 ---
 
-## ⚡ Google Colab
+## ⚡ Interactive Google Colab Notebook
 
-To train and experiment on a free cloud GPU:
-1. Open [Google Colab](https://colab.research.google.com).
-2. Upload `GPT2_From_Scratch_Colab.ipynb`.
-3. Set runtime to **T4 GPU** (`Runtime > Change runtime type > T4 GPU`).
-4. Select **Runtime > Run all**.
+A fully interactive, pre-executed version of the training pipeline and all empirical experiments is available directly on Google Colab:
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1MIBM8Zjz-L7lLfQlj5HTbSuTqLPsknB_?usp=sharing)
+
+**Direct Link:** [Open in Google Colab](https://colab.research.google.com/drive/1MIBM8Zjz-L7lLfQlj5HTbSuTqLPsknB_?usp=sharing)
+
+To inspect pre-computed results or run on a free cloud GPU:
+1. Open the [Google Colab Link](https://colab.research.google.com/drive/1MIBM8Zjz-L7lLfQlj5HTbSuTqLPsknB_?usp=sharing) (or upload `GPT2_From_Scratch_Colab.ipynb`).
+2. Verify runtime is set to **T4 GPU** (`Runtime > Change runtime type > T4 GPU`).
+3. Select **Runtime > Run all**.
 
 ---
 
