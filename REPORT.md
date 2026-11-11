@@ -14,14 +14,8 @@ Before Transformers, sequence modeling relied on Recurrent Neural Networks (RNNs
 
 $$h_t = \tanh(W_{hh} h_{t-1} + W_{xh} x_t + b_h)$$
 
-```
-   x_1          x_2          x_3               x_T
-    │            │            │                 │
-    ▼            ▼            ▼                 ▼
- ┌─────┐      ┌─────┐      ┌─────┐           ┌─────┐
- │ RNN ├─────►│ RNN ├─────►│ RNN ├─── ... ──►│ RNN │ ──► Final Summary (h_T)
- └─────┘      └─────┘      └─────┘           └─────┘
-```
+![Recurrent Neural Network Unfolding](results/rnn_unfolded.png)
+*Figure 1: Recurrent Neural Network (RNN) cell and its temporal unfolding across sequential time steps, showing recurrent transition weights $W_{hh}$, input projection $W_{xh}$, and output projection $W_{hy}$.*
 
 **Why Recurrence Fails:**
 - **Strict $O(T)$ Serial Processing:** $h_t$ cannot be computed until $h_{t-1}$ is finished. The temporal loop cannot be parallelized across tokens, leaving GPUs underutilized.
@@ -304,7 +298,7 @@ The baseline GPT-2 model ($d_{model}=128$, $4$ layers, $4$ heads, $T=128$, batch
 | **2000** | **1.4715** | **1.6538** | **5.23** |
 
 ![Training and Validation Loss Trajectory](results/loss_dynamics.png)
-*Figure 1: Cross-entropy loss trajectory over 2,000 steps. Validation loss reaches 1.6538, corresponding to an effective vocabulary choice of only ~5.2 characters per position.*
+*Figure 2: Cross-entropy loss trajectory over 2,000 steps. Validation loss reaches 1.6538, corresponding to an effective vocabulary choice of only ~5.2 characters per position.*
 
 ---
 
@@ -438,7 +432,7 @@ To evaluate the contribution of transformer depth, an ablated model with $2$ lay
 | **1000** | **1.8540** | **1.9499** | **$+0.0959$** |
 
 ![Ablation Study: Convergence of 4 Layers vs 2 Layers](results/ablation_depth.png)
-*Figure 2: Validation loss comparison between the 4-layer baseline and 2-layer ablated model over 1,000 steps.*
+*Figure 3: Validation loss comparison between the 4-layer baseline and 2-layer ablated model over 1,000 steps.*
 
 - **Key Takeaway:** The 2-layer model exhibits a persistent $\approx 0.10$ cross-entropy penalty throughout training. While shallow networks can model local n-gram statistics, deeper layers are essential for constructing hierarchical abstractions, long-distance syntactic dependencies, and stable character identities.
 
